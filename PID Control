@@ -1,0 +1,50 @@
+// Define sensor and motor pins
+#define LEFT_SENSOR_PIN A0
+#define RIGHT_SENSOR_PIN A1
+#define LEFT_MOTOR_PIN 5
+#define RIGHT_MOTOR_PIN 6
+
+// PID variables
+float Kp = 1.5;  // Proportional gain
+float Ki = 0.0;  // Integral gain (set to 0 first, adjust later)
+float Kd = 0.5;  // Derivative gain
+
+float previousError = 0;
+float integral = 0;
+int baseSpeed = 100;  // Adjust speed based on your robot
+
+void setup() {
+  pinMode(LEFT_SENSOR_PIN, INPUT);
+  pinMode(RIGHT_SENSOR_PIN, INPUT);
+  pinMode(LEFT_MOTOR_PIN, OUTPUT);
+  pinMode(RIGHT_MOTOR_PIN, OUTPUT);
+}
+
+void loop() {
+  // Read sensor values
+  int leftSensor = digitalRead(LEFT_SENSOR_PIN);
+  int rightSensor = digitalRead(RIGHT_SENSOR_PIN);
+
+  // Compute error
+  int error = leftSensor - rightSensor; 
+
+  // Calculate PID terms
+  integral += error;
+  float derivative = error - previousError;
+  float correction = (Kp * error) + (Ki * integral) + (Kd * derivative);
+
+  // Adjust motor speeds
+  int leftSpeed = baseSpeed - correction;
+  int rightSpeed = baseSpeed + correction;
+
+  // Apply speed limits
+  leftSpeed = constrain(leftSpeed, 0, 255);
+  rightSpeed = constrain(rightSpeed, 0, 255);
+
+  // Drive motors
+  analogWrite(LEFT_MOTOR_PIN, leftSpeed);
+  analogWrite(RIGHT_MOTOR_PIN, rightSpeed);
+
+  // Store error for next loop
+  previousError = error;
+}
