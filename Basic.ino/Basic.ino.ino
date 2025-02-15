@@ -47,8 +47,11 @@ int irmove = 0;
 int irdata = 0;
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 =======
+=======
+>>>>>>> Stashed changes
 int ena = 9;
 int enb =10;
 
@@ -56,6 +59,9 @@ int Rightforward = 11;
 int Rightreverse = 9;
 int Leftforward = 7;
 int Leftreverse = 6;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 void setup() {
