@@ -4,16 +4,13 @@ Servo myServo;  // Create a servo object
 
 #define cout 12
 #define cs0 A4
-#define cs1 5
+#define cs1 A1
 #define cs2 3
 #define cs3 4
-#define ir1 A2
-#define ir2 A3
+#define irLeft A2
+#define irRight A3
 
-
-
-
-enum colorEnum{
+enum colorEnum {
   BLACK,
   RED,
   BLUE,
@@ -22,8 +19,7 @@ enum colorEnum{
   WHITE,
 };
 
-
-typedef struct color{
+typedef struct color {
   char* name;
   enum colorEnum colEnum;
   int s2;
@@ -33,190 +29,215 @@ typedef struct color{
   int value;
 } color;
 
+// Define colors
+color reds = {"red", RED, LOW, LOW, 10, 100, 0};
+color blues = {"blue", BLUE, LOW, HIGH, 5, 60, 0};
+color greens = {"green", GREEN, HIGH, HIGH, 10, 100, 0};
+color colorList[] = {reds, blues, greens};
 
-
-// int red = 0;
-// int blue = 0;
-// int green = 0;
-
-color reds = {"red",RED,LOW,LOW,10,100,0};
-color blues = {"blue",BLUE,LOW,HIGH,5,60,0};
-color greens = {"green",GREEN,HIGH,HIGH,10,100,0};
-
-color colorList[] = {reds,blues,greens};
-
-
-//ir data
+// IR data
 int irmove = 0;
 int irdata = 0;
 
-int ena = 9;
-int enb =10;
+// Motor pins
+int ena = 6; // enable A = controle de vitesse du moteur gauche
+int enb = 5; // enable B = controle de vitesse du moteur droit
+int leftForward = 9;
+int leftReverse = 7;
+int RightReverse = 8;
+int RightForward = 11;
 
-int leftForward = 11;
-int leftReverse = 8;
-int RightReverse = 6;
-int RightForward = 7;
-
+bool motorEnabled = false;  // Flag to track motor state
 
 void setup() {
-  // put your setup code here, to run once:
   pinMode(cs0, OUTPUT);
-  pinMode(cs1,OUTPUT);
+  pinMode(cs1, OUTPUT);
   pinMode(cs2, OUTPUT);
   pinMode(cs3, OUTPUT);
-  pinMode(ena,OUTPUT);
-  pinMode(RightForward,OUTPUT);
-  pinMode(leftForward,OUTPUT);
-  myServo.attach(2);
+  pinMode(enb, OUTPUT);
+  pinMode(ena, OUTPUT);
+  pinMode(RightForward, OUTPUT);
+  pinMode(leftForward, OUTPUT);
+  pinMode(RightReverse, OUTPUT);
+  pinMode(leftReverse, OUTPUT);
+
+  myServo.attach(2); // definition du servo sur le port DIGITAL 2
   Serial.begin(9600);
+
+    digitalWrite(RightForward, HIGH); // mettre en marche le moteur droit 
+    digitalWrite(leftForward, HIGH); // mettre en marche le moteur gauche
+
+
+
 }
 
-
-color calibrate(color c ){
-  // calibrate a color (ISSUE WITH BLUE)
+color calibrate(color c) {
   char command;
-  int max = 0;
-  int min = 255;
-  Serial.print("Reading max, press 'B' to stop\n");
-  while( command != 'B'){
-    command = Serial.read();
-    int val = setBound(c);
-    if (val > max){
-      max = val;
+  int maxVal = 0;
+  int minVal = 255;
+  
+  Serial.println("Reading max, press 'B' to stop");
+  
+  while (true) {
+    if (Serial.available() > 0) {
+      command = Serial.read();
+      if (command == 'B') break;
     }
-  }
-  c.max = max;
-  Serial.print(c.max);
-  Serial.print("Reading of max done\n ");
-  while ( command != 'C'){
-    command = Serial.read();
-  }
-  Serial.print("Reading of min started. Press 'W' to stop \n");
-  while ( command != 'W'){
-    command = Serial.read();
     
     int val = setBound(c);
-    if (val < min){
-      min = val;
-    }
+    if (val > maxVal) maxVal = val;
   }
-  c.min = min;
-  Serial.print(c.min);
+  
+  c.max = maxVal;
+  Serial.print("Max: ");
+  Serial.println(c.max);
+
+  Serial.println("Reading min, press 'W' to stop");
+  while (true) {
+    if (Serial.available() > 0) {
+      command = Serial.read();
+      if (command == 'W') break;
+    }
+    
+    int val = setBound(c);
+    if (val < minVal) minVal = val;
+  }
+
+  c.min = minVal;
+  Serial.print("Min: ");
+  Serial.println(c.min);
+  
   return c;
 }
 
-int setBound(color c){
-  
+int setBound(color c) {
   digitalWrite(cs2, c.s2);
   digitalWrite(cs3, c.s3);
-  return pulseIn(cout,LOW);
+  return pulseIn(cout, LOW);
 }
 
-enum colorEnum getColor(){
-  // get the detected color (MORE TUNING REQUIRED)
-  enum colorEnum colorDetected = BLACK;   // enum defined at the beginning of the program
+enum colorEnum getColor() {
+  enum colorEnum colorDetected = BLACK;
 
-  for (int i = 0; i < 3; i ++){
-    digitalWrite(cs2, colorList[i].s2); // cs2 and cs3 are S2 and S3 ports of the color sensor
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(cs2, colorList[i].s2);
     digitalWrite(cs3, colorList[i].s3);
-   
-    colorList[i].value = constrain(map(pulseIn(cout, LOW),colorList[i].min,colorList[i].max,255,0),0,255); // colorList is the list of colors detected by the sensor ( defined at the beginning of the program)
-    color c = colorList[i];
-    //Serial.print('\n');
-    if ((c.value > 200 && c.colEnum != BLUE) || (c.value > 245 && c.colEnum == BLUE)){
 
-      if (colorDetected == BLACK){
-        colorDetected = c.colEnum;
-        
-      }
-      else if (colorDetected == MIXED){
+    colorList[i].value = constrain(map(pulseIn(cout, LOW), colorList[i].min, colorList[i].max, 255, 0), 0, 255);
+    
+    if ((colorList[i].value > 200 && colorList[i].colEnum != BLUE) || (colorList[i].value > 245 && colorList[i].colEnum == BLUE)) {
+      if (colorDetected == BLACK) {
+        colorDetected = colorList[i].colEnum;
+      } else if (colorDetected == MIXED) {
         colorDetected = WHITE;
-        
-      }
-      else {
+      } else {
         colorDetected = MIXED;
-        
       }
-      
     }
-    return colorDetected;
   }
+  
+  return colorDetected;
 }
-
 
 void loop() {
-  digitalWrite(cs0, HIGH); // set frequency to 100 % DO NOT CHANGE. Maybe change it if  
-  digitalWrite(cs1,HIGH);
-  analogWrite(enb,100);
-  //digitalWrite(leftForward,HIGH);
+  digitalWrite(cs0, HIGH);
+  digitalWrite(cs1, HIGH);
+
+
+    digitalWrite(RightForward, HIGH);
+    digitalWrite(leftForward, HIGH);
 
   followTrack();
+    /*
+    digitalWrite(leftForward, LOW);
+    digitalWrite(RightForward, LOW);
+    digitalWrite(RightReverse, LOW);
+    digitalWrite(leftReverse, LOW);
+    */
 
-  // input
-  char command = Serial.read();
-  if (command == 'R'){
-    Serial.print("   Red calibration \n ");
-    reds = calibrate(reds);
+    //servoPush();
+
+  // Handle Serial Commands
+
+
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    
+    if (command == 'R') {
+      Serial.println("Red calibration");
+      reds = calibrate(reds);
+    } else if (command == 'G') {
+      Serial.println("Green Calibration");
+      greens = calibrate(greens);
+    } else if (command == 'B') {
+      Serial.println("Blue Calibration");
+      blues = calibrate(blues);
+    }
   }
-  else if ( command == 'G' ){
-    Serial.print(" Green Calibration");
-    greens = calibrate(greens);
-  }
-  else if (command == 'B'){
-    Serial.print(" Blue calibration");
-    blues = calibrate(blues);
-  }
-  
-  /*
+
   enum colorEnum colorDetected = getColor();
   
-  if (colorDetected == WHITE){
-    Serial.print("White");
-  }
-  else if (colorDetected == MIXED){
-    Serial.print("Mixed");
-  }
-  else if (colorDetected == BLACK){
-    Serial.print("Black");
-  }
-  else {
-    for (int i = 0; i < 3; i ++){
-      if (colorList[i].colEnum == colorDetected){
-        Serial.print(colorList[i].name);
+  if (colorDetected == WHITE) {
+    Serial.println("White");
+  } else if (colorDetected == MIXED) {
+    Serial.println("Mixed");
+  } else if (colorDetected == BLACK) {
+    Serial.println("Black");
+  } else {
+    for (int i = 0; i < 3; i++) {
+      if (colorList[i].colEnum == colorDetected) {
+        Serial.println(colorList[i].name);
       }
     }
   }
 
-  Serial.print("   / IR  motion = ");
-  irmove = pulseIn(ir1,LOW);
-  Serial.print(irmove);
-  Serial.print("   / IR  presence = ");
-  irdata = digitalRead(ir1);
-  Serial.print(irdata);
+  Serial.print("IR motion: ");
+  irmove = pulseIn(irLeft, LOW);
+  Serial.println(irmove);
 
-  Serial.print('\n');
-  
+  Serial.print("IR presence: ");
+  irdata = digitalRead(irLeft);
+  Serial.println(irdata);
+
   delay(200);
-  */
+  
+
 }
 
-void followTrack(){
-    delay(100);
-    enum colorEnum colorDetected = getColor();
-    if (colorDetected == WHITE){
-      Serial.println("White");
-    }
-    else if (colorDetected == MIXED){
-      Serial.println("Mixed");
-    }
-    else if (colorDetected == BLACK){
-      Serial.println("Black");
-    }
+void followTrack() {
+  int threshold = 100;
+  
+  if (analogRead(irLeft) < threshold) {
+    // if the reading from the left IR is below the threshold, it means WHITE is detected
+    // Steer right
+      analogWrite(ena, 255);
+    // shortlty turn very high speed to trigger the motor
+      delay(1);
+     analogWrite(ena, 40);
+     analogWrite(enb, 0);
+     // eteindre le moteur oppose pour augmenter la rotation
+    Serial.println("steer right");
+  }
+  if (analogRead(irRight) < threshold) {
+    // if the reading from the right IR is below the threshold, it means WHITE is detected
+    // Steer left
+        analogWrite(enb, 255);
+        // shortlty turn very high speed to trigger the motor
+        delay(1);
+        analogWrite(enb, 40);
+        analogWrite(ena, 0);
+        // eteindre le moteur oppose pour augmenter la rotation
+    Serial.println("steer left");
+  } else {
+    // Stop
+    analogWrite(ena, 70);
+    analogWrite(enb, 70);
+    // maintenir une vitesse constante lorsque le robot est sur la ligne noire
+  }
 }
 
-void servoPush(){
- myServo.write(0);
- delay(1000);
- myServo.write(180);
+void servoPush() {
+  myServo.write(0);
+  delay(1000);
+  myServo.write(180);
 }
