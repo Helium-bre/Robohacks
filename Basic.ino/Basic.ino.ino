@@ -1,5 +1,5 @@
 #define cout 12
-#define cs0 2
+#define cs0 2 
 #define cs1 5
 #define cs2 3
 #define cs3 4
@@ -16,7 +16,7 @@ enum colorEnum{
   GREEN,
   MIXED,
   WHITE,
-};
+}colorEnum;
 
 
 typedef struct color{
