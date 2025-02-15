@@ -46,7 +46,17 @@ color colorList[] = {reds,blues,greens};
 int irmove = 0;
 int irdata = 0;
 
+<<<<<<< Updated upstream
 
+=======
+int ena = 9;
+int enb =10;
+
+int Rightforward = 11;
+int Rightreverse = 9;
+int Leftforward = 7;
+int Leftreverse = 6;
+>>>>>>> Stashed changes
 
 void setup() {
   // put your setup code here, to run once:
@@ -181,4 +191,8 @@ void loop() {
   Serial.print('\n');
   
   delay(200);
+}
+
+void reverseDirection(int speed){
+
 }
