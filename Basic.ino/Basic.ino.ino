@@ -1,8 +1,10 @@
 #define cout 12
-#define cs0s1 2
+#define cs0 2
+#define cs1 5
 #define cs2 3
 #define cs3 4
-#define ir 11
+#define ir1 A2
+#define ir2 A3
 enum colorEnum{
   BLACK,
   RED,
@@ -85,10 +87,40 @@ int setBound(color c){
   return pulseIn(cout,LOW);
 }
 
+enum colorEnum getColor(){
+  enum colorEnum colorDetected = BLACK;   // enum defined at the beginning of the program
+
+  for (int i = 0; i < 3; i ++){
+    digitalWrite(cs2, colorList[i].s2); // cs2 and cs3 are S2 and S3 ports of the color sensor
+    digitalWrite(cs3, colorList[i].s3);
+   
+    colorList[i].value = constrain(map(pulseIn(cout, LOW),colorList[i].min,colorList[i].max,255,0),0,255); // colorList is the list of colors detected by the sensor ( defined at the beginning of the program)
+    color c = colorList[i];
+    //Serial.print('\n');
+    if ((c.value > 200 && c.colEnum != BLUE) || (c.value > 245 && c.colEnum == BLUE)){
+
+      if (colorDetected == BLACK){
+        colorDetected = c.colEnum;
+        
+      }
+      else if (colorDetected == MIXED){
+        colorDetected = WHITE;
+        
+      }
+      else {
+        colorDetected = MIXED;
+        
+      }
+      
+    }
+    return colorDetected;
+  }
+}
 
 
 void loop() {
-  digitalWrite(cs0s1, HIGH); // set frequency to 100 % DO NOT CHANGE
+  digitalWrite(cs0, HIGH); // set frequency to 100 % DO NOT CHANGE
+  digitalWrite(cs1,HIGH);
 
   // input
   char command = Serial.read();
@@ -118,26 +150,23 @@ void loop() {
     // Serial.print(" = ");
     colorList[i].value = constrain(map(pulseIn(cout, LOW),colorList[i].min,colorList[i].max,255,0),0,255);
     color c = colorList[i];
-    Serial.print(c.value);
+    //Serial.print(c.value);
     Serial.print('\n');
-    if (c.value > 200){
+    if ((c.value > 200 && c.colEnum != BLUE) || (c.value > 245 && c.colEnum == BLUE)){
       //Serial.print("Color detected");
       if (colorDetected == BLACK){
         colorDetected = c.colEnum;
-        Serial.print("it is not black anymore    ");
-        if (colorDetected == BLACK){
-          Serial.print("error");
-        }
+        
       }
       else if (colorDetected == MIXED){
         colorDetected = WHITE;
-        Serial.print("it is now white");
+        
       }
       else {
         colorDetected = MIXED;
-        Serial.print("It is now mixed");
+        
       }
-      Serial.print('\n');
+      
     }
     //Serial.print(c.value);
   }
@@ -157,7 +186,7 @@ void loop() {
       }
     }
   }
-  Serial.print('\n');
+  // Serial.print('\n');
   
 
   // digitalWrite(cs2, LOW);
