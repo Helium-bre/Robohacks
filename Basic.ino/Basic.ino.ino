@@ -3,8 +3,9 @@
 Servo myServo;  // Create a servo object
 
 #define cout 12
+#define cs0 2 
 #define cs0 A4
-#define cs1 A1
+#define cs1 5
 #define cs2 3
 #define cs3 4
 #define irLeft A2
@@ -17,7 +18,7 @@ enum colorEnum {
   GREEN,
   MIXED,
   WHITE,
-};
+}colorEnum;
 
 typedef struct color {
   char* name;
