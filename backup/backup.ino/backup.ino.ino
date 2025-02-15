@@ -12,6 +12,8 @@ Servo myServo;  // Create a servo object
 #define irRight A2
 
 
+
+
 enum colorEnum {
   BLACK,
   RED,
@@ -20,13 +22,6 @@ enum colorEnum {
   MIXED,
   WHITE,
 }colorEnum;
-
-enum lastMove{
-  BACK,
-  FRONT,
-  LEFT,
-  RIGHT,
-}lastMove;
 
 typedef struct color {
   char* name;
@@ -40,8 +35,8 @@ typedef struct color {
 
 // Define colors
 color reds = {"red",RED,LOW,LOW,12,100,0};
-color blues = {"blue",BLUE,LOW,HIGH,10,70,0};
-color greens = {"green",GREEN,HIGH,HIGH,16,100,0};
+color blues = {"blue",BLUE,LOW,HIGH,12,70,0};
+color greens = {"green",GREEN,HIGH,HIGH,14,120,0};
 color colorList[] = {reds, blues, greens};
 
 // IR data
@@ -59,8 +54,6 @@ int RightForward = 7;
 int enaSpeed = 70;
 int enbSpeed = 90;
 
-enum lastMove lm = BACK;
-//bool back = false;
 bool motorEnabled = false;  // Flag to track motor state
 int dropseed = 0;
 void setup() {
@@ -85,7 +78,7 @@ void setup() {
 
 }
 
-color calibrate(color c) { // BRO WTF DID U DO TO THIS FCKIN CODEEEEEEEE
+color calibrate(color c) {
   char command;
   int maxVal = 0;
   int minVal = 255;
@@ -112,7 +105,6 @@ color calibrate(color c) { // BRO WTF DID U DO TO THIS FCKIN CODEEEEEEEE
       if (command == 'C') break;
     }
   }
-
   Serial.println("Reading min, press 'W' to stop");
   while (true) {
     if (Serial.available() > 0) {
@@ -163,10 +155,10 @@ enum colorEnum getColor() {
 void loop() {
   digitalWrite(cs0, HIGH); // set frequency of color sensor to 100% DO NOT TOUCH I DON'T KNOW WHAT THAT SHIT DOES
   digitalWrite(cs1, HIGH);
-  //digitalWrite(leftForward,HIGH);
-  //digitalWrite(RightForward,HIGH);
+  digitalWrite(leftForward,HIGH);
+  digitalWrite(RightForward,HIGH);
   enum colorEnum detectedColor = getColor();
-  if ((detectedColor == BLUE || detectedColor == GREEN) && dropseed == 0 ){ // if green or blue thingy
+  if ((detectedColor == BLUE || detectedColor == GREEN) && dropseed == 0){ // if green or blue thingy
     dropseed = 1;
     digitalWrite(leftForward,LOW);
     digitalWrite(leftReverse,LOW);
@@ -178,7 +170,7 @@ void loop() {
     if (!(detectedColor == BLUE || detectedColor == GREEN)){
       dropseed = 0;
     }
-    lm = followTrack(lm);
+    followTrack();
   }
   //digitalWrite(RightForward, HIGH);
   //digitalWrite(leftForward, HIGH);
@@ -236,53 +228,12 @@ void loop() {
   // irdata = digitalRead(irLeft);
   // Serial.println(irdata);
 
-  delay(100); // delay b4 next iteration
+  delay(50); // delay b4 next iteration
   
 
 }
-void oppLastMove(enum lastMove lm){
-  // change direction
-  if (lm == BACK){
-    // go front
-    digitalWrite(leftForward,HIGH);
-    digitalWrite(leftReverse,LOW);
-    digitalWrite(RightForward,HIGH);
-    digitalWrite(RightReverse,LOW);
-    analogWrite(ena, enaSpeed);
-    analogWrite(enb, enbSpeed);
-    Serial.print("going front \n");
-  }
-  else if ( lm == FRONT){
-    // go back
-    digitalWrite(leftForward,LOW);
-    digitalWrite(leftReverse,HIGH);
-    digitalWrite(RightForward,LOW);
-    digitalWrite(RightReverse,HIGH);
-    analogWrite(ena, enaSpeed);
-    analogWrite(enb, enbSpeed);
-    Serial.print("going back \n");
-  }
-  else if (lm == LEFT){
-    // go right
-    digitalWrite(leftForward,HIGH);
-    digitalWrite(leftReverse,LOW);
-    digitalWrite(RightForward,HIGH);
-    digitalWrite(RightReverse,LOW);
-    analogWrite(ena, enaSpeed);
-    analogWrite(enb, 0);
-    Serial.print("going right \n");
-  }
-  else {
-    digitalWrite(leftForward,HIGH);
-    digitalWrite(leftReverse,LOW);
-    digitalWrite(RightForward,HIGH);
-    digitalWrite(RightReverse,LOW);
-    analogWrite(enb, enbSpeed);
-    analogWrite(ena, 0);
-    Serial.print("going left \n");
-  }
-}
-enum lastMove followTrack(enum lastMove lm) { // I SPENT 2 HOURS DEBUGGING THIS MF BECAIUSE OF A FCKING IF ELSE STATEMENT
+
+void followTrack() { // I SPENT 2 HOURS DEBUGGING THIS MF BECAIUSE OF A FCKING IF ELSE STATEMENT
   int threshold = 96;
   int leftVal = analogRead(irLeft);
   //Serial.print(leftVal);
@@ -291,11 +242,11 @@ enum lastMove followTrack(enum lastMove lm) { // I SPENT 2 HOURS DEBUGGING THIS 
   //Serial.print(rightVal);
   //Serial.print(" <- Right \n");
 
-  enum lastMove cm = lm;
+  
   if ((leftVal < threshold) && (rightVal < threshold)){
-    // analogWrite(ena, 70);
-    // analogWrite(enb, 90);
-    oppLastMove(lm);
+    analogWrite(ena, enaSpeed);
+    analogWrite(enb, enbSpeed);
+    
   }
 
   else if (leftVal < threshold) {
@@ -312,7 +263,6 @@ enum lastMove followTrack(enum lastMove lm) { // I SPENT 2 HOURS DEBUGGING THIS 
     analogWrite(enb, 0);
      // eteindre le moteur oppose pour augmenter la rotation
     Serial.println("steer right");
-    cm = RIGHT;
   }
   else if (rightVal < threshold) {
     // if the reading from the right IR is below the threshold, it means WHITE is detected
@@ -329,7 +279,6 @@ enum lastMove followTrack(enum lastMove lm) { // I SPENT 2 HOURS DEBUGGING THIS 
     analogWrite(ena, 0);
     // eteindre le moteur oppose pour augmenter la rotation
     Serial.println("steer left");
-    cm = LEFT;
   } 
   else {
     // Stop
@@ -340,10 +289,8 @@ enum lastMove followTrack(enum lastMove lm) { // I SPENT 2 HOURS DEBUGGING THIS 
     digitalWrite(RightReverse,LOW);
     analogWrite(ena, enaSpeed);
     analogWrite(enb, enbSpeed);
-    cm = FRONT;
     // maintenir une vitesse constante lorsque le robot est sur la ligne noire
   }
-  return cm;
 }
 
 void servoPush() {
