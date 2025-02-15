@@ -1,5 +1,13 @@
+#include <Servo.h>  // Include the Servo library
+
+Servo myServo;  // Create a servo object
+
 #define cout 12
+<<<<<<< HEAD
 #define cs0 2 
+=======
+#define cs0 A4
+>>>>>>> 70ad7e128131ca9f01256f28f43dffdac15c2f84
 #define cs1 5
 #define cs2 3
 #define cs3 4
@@ -46,6 +54,13 @@ color colorList[] = {reds,blues,greens};
 int irmove = 0;
 int irdata = 0;
 
+int ena = 9;
+int enb =10;
+
+int leftForward = 11;
+int leftReverse = 8;
+int RightReverse = 6;
+int RightForward = 7;
 
 
 void setup() {
@@ -54,13 +69,17 @@ void setup() {
   pinMode(cs1,OUTPUT);
   pinMode(cs2, OUTPUT);
   pinMode(cs3, OUTPUT);
+  pinMode(ena,OUTPUT);
+  pinMode(RightForward,OUTPUT);
+  pinMode(leftForward,OUTPUT);
+  myServo.attach(2);
   Serial.begin(9600);
 }
 
 
 color calibrate(color c ){
   // calibrate a color (ISSUE WITH BLUE)
-  char command ;
+  char command;
   int max = 0;
   int min = 255;
   Serial.print("Reading max, press 'B' to stop\n");
@@ -133,6 +152,10 @@ enum colorEnum getColor(){
 void loop() {
   digitalWrite(cs0, HIGH); // set frequency to 100 % DO NOT CHANGE. Maybe change it if  
   digitalWrite(cs1,HIGH);
+  analogWrite(enb,100);
+  //digitalWrite(leftForward,HIGH);
+
+  followTrack();
 
   // input
   char command = Serial.read();
@@ -149,8 +172,7 @@ void loop() {
     blues = calibrate(blues);
   }
   
-  //
-
+  /*
   enum colorEnum colorDetected = getColor();
   
   if (colorDetected == WHITE){
@@ -170,7 +192,6 @@ void loop() {
     }
   }
 
-
   Serial.print("   / IR  motion = ");
   irmove = pulseIn(ir1,LOW);
   Serial.print(irmove);
@@ -181,4 +202,25 @@ void loop() {
   Serial.print('\n');
   
   delay(200);
+  */
+}
+
+void followTrack(){
+    delay(100);
+    enum colorEnum colorDetected = getColor();
+    if (colorDetected == WHITE){
+      Serial.println("White");
+    }
+    else if (colorDetected == MIXED){
+      Serial.println("Mixed");
+    }
+    else if (colorDetected == BLACK){
+      Serial.println("Black");
+    }
+}
+
+void servoPush(){
+ myServo.write(0);
+ delay(1000);
+ myServo.write(180);
 }
