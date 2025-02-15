@@ -48,8 +48,11 @@ int irdata = 0;
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 int ena = 9;
@@ -60,6 +63,9 @@ int Rightreverse = 9;
 int Leftforward = 7;
 int Leftreverse = 6;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
