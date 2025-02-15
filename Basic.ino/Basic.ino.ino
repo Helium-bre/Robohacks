@@ -5,6 +5,10 @@
 #define cs3 4
 #define ir1 A2
 #define ir2 A3
+
+
+
+
 enum colorEnum{
   BLACK,
   RED,
@@ -23,25 +27,31 @@ typedef struct color{
   int min;
   int max;
   int value;
-};
-
-int red = 0;
-int blue = 0;
+} color;
 
 
-int green = 0;
 
-color reds = {"red",RED,LOW,LOW,10,70,0};
-color blues = {"blue",BLUE,LOW,HIGH,5,50,0};
-color greens = {"green",GREEN,HIGH,HIGH,10,70,0};
+// int red = 0;
+// int blue = 0;
+// int green = 0;
+
+color reds = {"red",RED,LOW,LOW,10,100,0};
+color blues = {"blue",BLUE,LOW,HIGH,5,60,0};
+color greens = {"green",GREEN,HIGH,HIGH,10,100,0};
 
 color colorList[] = {reds,blues,greens};
+
+
+//ir data
 int irmove = 0;
 int irdata = 0;
+
+
+
 void setup() {
   // put your setup code here, to run once:
-
-  pinMode(cs0s1, OUTPUT);
+  pinMode(cs0, OUTPUT);
+  pinMode(cs1,OUTPUT);
   pinMode(cs2, OUTPUT);
   pinMode(cs3, OUTPUT);
   Serial.begin(9600);
@@ -49,6 +59,7 @@ void setup() {
 
 
 color calibrate(color c ){
+  // calibrate a color (ISSUE WITH BLUE)
   char command ;
   int max = 0;
   int min = 255;
@@ -88,6 +99,7 @@ int setBound(color c){
 }
 
 enum colorEnum getColor(){
+  // get the detected color (MORE TUNING REQUIRED)
   enum colorEnum colorDetected = BLACK;   // enum defined at the beginning of the program
 
   for (int i = 0; i < 3; i ++){
@@ -119,7 +131,7 @@ enum colorEnum getColor(){
 
 
 void loop() {
-  digitalWrite(cs0, HIGH); // set frequency to 100 % DO NOT CHANGE
+  digitalWrite(cs0, HIGH); // set frequency to 100 % DO NOT CHANGE. Maybe change it if  
   digitalWrite(cs1,HIGH);
 
   // input
@@ -139,37 +151,8 @@ void loop() {
   
   //
 
-  enum colorEnum colorDetected = BLACK;
-
-  for (int i = 0; i < 3; i ++){
-    //color c = colorList[i];
-    digitalWrite(cs2, colorList[i].s2);
-    digitalWrite(cs3, colorList[i].s3);
-    // Serial.print("  /  ");
-    // Serial.print(c.name );
-    // Serial.print(" = ");
-    colorList[i].value = constrain(map(pulseIn(cout, LOW),colorList[i].min,colorList[i].max,255,0),0,255);
-    color c = colorList[i];
-    //Serial.print(c.value);
-    Serial.print('\n');
-    if ((c.value > 200 && c.colEnum != BLUE) || (c.value > 245 && c.colEnum == BLUE)){
-      //Serial.print("Color detected");
-      if (colorDetected == BLACK){
-        colorDetected = c.colEnum;
-        
-      }
-      else if (colorDetected == MIXED){
-        colorDetected = WHITE;
-        
-      }
-      else {
-        colorDetected = MIXED;
-        
-      }
-      
-    }
-    //Serial.print(c.value);
-  }
+  enum colorEnum colorDetected = getColor();
+  
   if (colorDetected == WHITE){
     Serial.print("White");
   }
@@ -186,30 +169,13 @@ void loop() {
       }
     }
   }
-  // Serial.print('\n');
-  
 
-  // digitalWrite(cs2, LOW);
-  // digitalWrite(cs3, LOW);
-  // Serial.print("    Red  value= ");
-  // red = map(pulseIn(cout, LOW),reds.min,reds.max,255,0);
-  // Serial.print(red);
-  // digitalWrite(cs2, LOW);
-  // digitalWrite(cs3, HIGH);
-  // Serial.print("/  Blue  value= ");
-  // blue = map(pulseIn(cout, LOW),blues.min,blues.max,255,0);
-  // Serial.print(blue);
-  // digitalWrite(cs2, HIGH);
-  // digitalWrite(cs3, HIGH);
-  // Serial.print("/  Green  value= ");
-  // green = map(pulseIn(cout, LOW),blues.min,blues.max,255,0);
-  // Serial.print(green);
 
   Serial.print("   / IR  motion = ");
-  irmove = pulseIn(ir,LOW);
+  irmove = pulseIn(ir1,LOW);
   Serial.print(irmove);
   Serial.print("   / IR  presence = ");
-  irdata = digitalRead(ir);
+  irdata = digitalRead(ir1);
   Serial.print(irdata);
 
   Serial.print('\n');
